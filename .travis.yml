@@ -19,10 +19,6 @@ jobs:
     python: 3.8
   - env: ARCH="armhf" DOCKER=yes
     python: 3.8
-  - env: ARCH="armv7" DOCKER=yes
-    python: 3.8
-  - env: ARCH="arm64" DOCKER=yes
-    python: 3.8
   - python: 3.6
   - python: 3.7
   - python: 3.8
