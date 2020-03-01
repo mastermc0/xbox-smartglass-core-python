@@ -1,34 +1,27 @@
-# Based on https://softwarejourneyman.com/docker-python-install-wheels.html
-
-#########################################
-# Image WITH C compiler, building wheels for next stage
-FROM python:3.6-alpine as bigimage
+ARG BUILD_FROM
+FROM $BUILD_FROM
 
 ENV LANG C.UTF-8
 
-# Copy project files
+RUN apk add --no-cache \
+	 jq \
+	 python3 \
+	 libffi \
+	 openssl \
+      && apk add --no-cache --virtual .build-dependencies \
+	 gcc \
+         musl-dev \
+	 python3-dev \
+	 libffi-dev \
+         openssl-dev \
+      && python3 -m ensurepip \
+      && rm -r /usr/lib/python*/ensurepip \
+      && pip3 install --upgrade pip setuptools \
+      && if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi \
+      && if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi \
+      && rm -r /root/.cache
+
 COPY . /src/smartglass-core
 
-# install the C compiler
-RUN apk add --no-cache jq gcc musl-dev libffi-dev openssl-dev
+RUN pip install /src/smartglass-core
 
-# instead of installing, create a wheel
-RUN pip wheel --wheel-dir=/root/wheels /src/smartglass-core
-
-#########################################
-# Image WITHOUT C compiler, installing the component from wheel
-FROM python:3.6-alpine as smallimage
-
-RUN apk add --no-cache openssl
-
-COPY --from=bigimage /root/wheels /root/wheels
-
-# Ignore the Python package index
-# and look for archives in
-# /root/wheels directory
-RUN pip install \
-      --no-index \
-      --find-links=/root/wheels \
-      xbox-smartglass-core
-
-CMD [ "xbox-rest-server" ]

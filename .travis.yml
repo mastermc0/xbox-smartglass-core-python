@@ -2,15 +2,37 @@ notifications:
   email: false
 dist: xenial
 language: python
+services:
+  docker
 python:
 - 3.6
 - 3.7
 - 3.8
 - pypy3
+env:
+  global:
+  - DOCKER_BASE_IMAGE="multiarch/alpine"
+  - DOCKER_IMAGE_APPENDIX="latest-stable"
+  - LOCAL_IMAGE_NAME="local/xbox-smartglass-core"
+  jobs:
+  - ARCH="aarch64"
+  - ARCH="amd64"
+  - ARCH="i386"
+  - ARCH="armhf"
+  - ARCH="armv7"
+  - ARCH="arm64"
+before_install:
+- export BUILD_FROM="$DOCKER_BASE_IMAGE:$ARCH-$DOCKER_IMAGE_APPENDIX"
+- docker run --rm --privileged multiarch/qemu-user-static:register --reset
+
 install:
 - pip install -U tox-travis
 - pip install -e .[dev]
-script: tox
+
+script:
+- tox
+- docker build -t $LOCAL_IMAGE_NAME:$TRAVIS_COMMIT-$ARCH --build-arg BUILD_FROM="$BUILD_FROM" .
+
 deploy:
   provider: pypi
   distributions: sdist bdist_wheel
