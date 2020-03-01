@@ -4,23 +4,28 @@ dist: xenial
 language: python
 services:
   docker
-python:
-- 3.6
-- 3.7
-- 3.8
-- pypy3
 env:
   global:
   - DOCKER_BASE_IMAGE="multiarch/alpine"
   - DOCKER_IMAGE_APPENDIX="latest-stable"
   - LOCAL_IMAGE_NAME="local/xbox-smartglass-core"
-  jobs:
-  - ARCH="aarch64"
-  - ARCH="amd64"
-  - ARCH="i386"
-  - ARCH="armhf"
-  - ARCH="armv7"
-  - ARCH="arm64"
+jobs:
+  include:
+  - env: ARCH="aarch64" DOCKER=yes
+    python: 3.8
+  - env: ARCH="amd64" DOCKER=yes
+    python: 3.8
+  - env: ARCH="i386" DOCKER=yes
+    python: 3.8
+  - env: ARCH="armhf" DOCKER=yes
+    python: 3.8
+  - env: ARCH="armv7" DOCKER=yes
+    python: 3.8
+  - env: ARCH="arm64" DOCKER=yes
+    python: 3.8
+  - python: 3.6
+  - python: 3.7
+  - python: 3.8
 before_install:
 - export BUILD_FROM="$DOCKER_BASE_IMAGE:$ARCH-$DOCKER_IMAGE_APPENDIX"
 - docker run --rm --privileged multiarch/qemu-user-static:register --reset
@@ -29,9 +34,13 @@ install:
 - pip install -U tox-travis
 - pip install -e .[dev]
 
-script:
-- tox
-- docker build -t $LOCAL_IMAGE_NAME:$TRAVIS_COMMIT-$ARCH --build-arg BUILD_FROM="$BUILD_FROM" .
+script: |
+  if [ -z $DOCKER ]
+  then
+    tox
+  else
+    build -t $LOCAL_IMAGE_NAME:$TRAVIS_COMMIT-$ARCH --build-arg BUILD_FROM="$BUILD_FROM" .
+  fi
 
 deploy:
   provider: pypi
