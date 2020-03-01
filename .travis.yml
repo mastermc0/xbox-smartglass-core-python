@@ -30,16 +30,19 @@ before_install:
 - export BUILD_FROM="$DOCKER_BASE_IMAGE:$ARCH-$DOCKER_IMAGE_APPENDIX"
 - docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
-install:
-- pip install -U tox-travis
-- pip install -e .[dev]
+install: |
+  if [ -z $DOCKER ]
+  then
+    pip install -U tox-travis
+    pip install -e .[dev]
+  fi
 
 script: |
   if [ -z $DOCKER ]
   then
     tox
   else
-    build -t $LOCAL_IMAGE_NAME:$TRAVIS_COMMIT-$ARCH --build-arg BUILD_FROM="$BUILD_FROM" .
+    docker build -t $LOCAL_IMAGE_NAME:$TRAVIS_COMMIT-$ARCH --build-arg BUILD_FROM="$BUILD_FROM" .
   fi
 
 deploy:
