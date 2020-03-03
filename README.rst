@@ -135,6 +135,7 @@ Ready to contribute? Here's how to set up `xbox-smartglass-core-python` for loca
 
 7. Before pushing the changes to git, please verify they actually work::
 
+    $ pre-commit run -a
     $ pytest
 
     # For more extensive testing on several frameworks:
@@ -157,7 +158,6 @@ Before you submit a pull request, check that it meets these guidelines:
 2. Added code is properly named and documented.
 3. On major changes the README is updated.
 4. Run tests / linting locally before pushing to remote.
-
 
 Credits
 -------
